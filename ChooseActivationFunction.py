@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+###
+#Функция, которая возвращяет функцию активации в зависимости от выбора пользователя в виде int
+###
 def chooseActivationFunction(activationFunction):
     match activationFunction:
         case 1:

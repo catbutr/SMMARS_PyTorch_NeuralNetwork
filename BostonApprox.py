@@ -3,11 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error
 from torch.utils.data import DataLoader
-import TorchDataset as TD
 import torch
 import FeedForwardBlock as ffb
+import TorchDataset as td
 
 # Проверка устройства
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -26,19 +25,17 @@ x_train = scaler.fit_transform(x_train)
 x_test = scaler.transform(x_test) 
 print("Среднее значение после нормализации:", x_train.mean(axis=0)) # должно быть близкое к 0
 print("Стандартное отклонение после нормализации:", x_train.std(axis=0)) # должно быть близкое к 1
-
-x_train = torch.tensor(x_train, dtype=torch.float32)
-x_test = torch.tensor(x_test, dtype=torch.float32)
+train_dataset = td.TorchDataset(x_train,y_train)
+test_dataset = td.TorchDataset(x_test,y_test)
 # Загрузка данных
-
-train_loader = DataLoader(x_train, 64)
-test_loader = DataLoader(x_test, 64)
-
+train_loader = DataLoader(train_dataset, 64)
+test_loader = DataLoader(test_dataset, 64)
 block = ffb.FeedForwardBlock(1,64,2)
 
-trainedNN = block.fit(500,block.model,block.criterion,block.optimizer,train_loader,test_loader,device)
+# Тренировка
+trainedNN = block.train(5,block.model,block.criterion,block.optimizer,train_loader,device)
 
-# plt.scatter(x_test, trainedNN, color='red', marker='x')
+#plt.scatter(x_test, trainedNN, color='red', marker='x')
 plt.scatter(x_test, y_test, color='blue', marker='o')
 plt.title('Boston house prices')
 plt.xlabel('LSTAT')

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import FeedForwardNN as ffnn
 
-
+#Моноблок
 class FeedForwardBlock():
     def __init__(self,inputSize=1, outputSize=1, numberOfLayers=1):
         super().__init__()
@@ -12,34 +12,28 @@ class FeedForwardBlock():
         self.optimizer = optim.SGD(params=self.model.parameters(), lr=0.001)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    def fit(self,num_epochs, model, loss_fn, optimizer, train_dataloader, val_loader, device):
+    #Тренировка
+    def train(self,num_epochs, model, criterion, optimizer, train_dataloader, device):
         model.train()
         for epoch in range(num_epochs):
-            for inputs, targets in zip(train_dataloader.dataset ,val_loader.dataset):
+            for inputs, targets in train_dataloader.dataset.x ,train_dataloader.dataset.y:
                 inputs, targets = inputs.to(device), targets.to(device)
-                # Get predictions.
+                #Получение предиктов
                 preds = model(inputs)
-                # Get loss.
-                loss = loss_fn(preds, targets)
-                # Compute gradients.
+                #Получение точности
+                loss = criterion(preds, targets)
+                #Вычисление градиента
                 loss.backward()
-                # Update model parameters i.e. backpropagation.
+                #Обновление данных в модели
                 optimizer.step()
-                # Reset gradients to zero before the next epoch.
+                #Градиенты в 0
                 optimizer.zero_grad()
-            if (epoch + 1) % 50 == 0:
-                # Get validation loss as well.
-                for val_input, val_targets in val_loader:
-                    val_input, val_targets = val_input.to(device), val_targets.to(device)
-                    out = model(val_input)
-                    val_loss = nn.MSELoss(out, val_targets)
-                print("Epoch [{}/{}], Training loss: {:.4f}, Validation Loss: {:.4f}".format(epoch + 1, num_epochs, loss.item(), val_loss)) # Report loss value after each epoch.
     
-    def evaluate(model, criterion, X, y):
+    # Валидация
+    def evaluate(model,criterion, val_loader, device):
         model.eval()
-        with torch.no_grad():
-            outputs = model(X)
-            loss = criterion(outputs, y)
-            rmse = torch.sqrt(loss)
-            mae = torch.mean(torch.abs(outputs - y))
-        return loss.item(), rmse.item(), mae.item()
+        for val_input, val_targets in val_loader:
+            val_input, val_targets = val_input.to(device), val_targets.to(device)
+            out = model(val_input)
+            val_loss = criterion(out, val_targets)
+        return val_loss
