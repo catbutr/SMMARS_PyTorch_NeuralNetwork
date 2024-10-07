@@ -16,18 +16,19 @@ class FeedForwardBlock():
     def train(self,num_epochs, model, criterion, optimizer, train_dataloader, device):
         model.train()
         for epoch in range(num_epochs):
-            for inputs, targets in train_dataloader.dataset.x ,train_dataloader.dataset.y:
-                inputs, targets = inputs.to(device), targets.to(device)
-                #Получение предиктов
-                preds = model(inputs)
-                #Получение точности
-                loss = criterion(preds, targets)
-                #Вычисление градиента
-                loss.backward()
-                #Обновление данных в модели
-                optimizer.step()
-                #Градиенты в 0
-                optimizer.zero_grad()
+            for idx, (data,target) in enumerate(train_dataloader):
+                for inputs, targets in data[epoch], target[epoch]:
+                    inputs, targets = inputs.to(device), targets.to(device)
+                    #Получение предиктов
+                    preds = model(inputs)
+                    #Получение точности
+                    loss = criterion(preds, targets)
+                    #Вычисление градиента
+                    loss.backward()
+                    #Обновление данных в модели
+                    optimizer.step()
+                    #Градиенты в 0
+                    optimizer.zero_grad()
     
     # Валидация
     def evaluate(model,criterion, val_loader, device):
