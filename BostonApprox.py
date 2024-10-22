@@ -25,21 +25,20 @@ x_train = scaler.fit_transform(x_train)
 x_test = scaler.transform(x_test) 
 print("Среднее значение после нормализации:", x_train.mean(axis=0)) # должно быть близкое к 0
 print("Стандартное отклонение после нормализации:", x_train.std(axis=0)) # должно быть близкое к 1
-train_dataset = TensorDataset(torch.from_numpy(x_train),torch.from_numpy(y_train.values))
-test_dataset = TensorDataset(torch.from_numpy(x_test),torch.from_numpy(y_test.values))
+train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
+test_dataset = TensorDataset(torch.from_numpy(x_test).type(torch.float),torch.from_numpy(y_test.values).type(torch.float))
 # Загрузка данных
 train_loader = DataLoader(train_dataset, 64)
 test_loader = DataLoader(test_dataset, 64)
-block = ffb.FeedForwardBlock(1,64,2)
+block = ffb.FeedForwardBlock(1,64,1)
 
-# Тренировка
-#trainedNN = block.train(5,block.model,block.criterion,block.optimizer,train_loader,device)
-
+#Тренировка
+trainedNN = block.train(5,block.model,block.criterion,block.optimizer,train_loader,device)
+print(x_train)
 #plt.scatter(x_test, trainedNN, color='red', marker='x')
-plt.scatter(x_test, y_test, color='blue', marker='o')
-plt.title('Boston house prices')
-plt.xlabel('LSTAT')
-plt.ylabel('MEDV')
-plt.legend(['Predicted', 'Actual'])
-plt.show()
-
+#plt.scatter(x_test, y_test, color='blue', marker='o')
+# plt.title('Boston house prices')
+# plt.xlabel('LSTAT')
+# plt.ylabel('MEDV')
+# plt.legend(['Predicted', 'Actual'])
+# plt.show()

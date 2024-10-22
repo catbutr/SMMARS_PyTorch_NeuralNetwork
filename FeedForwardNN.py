@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 import ActivationFunctionEnum as af
 import ChooseActivationFunction as caf
 
@@ -8,7 +9,7 @@ class FeedForwardNN(nn.Module):
         stack = []
         stack.append(nn.Linear(inputSize,numberOfNeurons))
         for i in range(0,numberOfLayers):
-            stack.append(nn.Linear(numberOfNeurons,numberOfNeurons))
+            stack.append(nn.Linear(numberOfNeurons,numberOfNeurons, dtype=torch.float32))
             stack.append(caf.chooseActivationFunction(activationFunction))
         stack.append(nn.Linear(numberOfNeurons,1))
         seq_stack = nn.Sequential(*stack)
