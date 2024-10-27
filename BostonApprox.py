@@ -28,14 +28,14 @@ print("Стандартное отклонение после нормализа
 train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
 test_dataset = TensorDataset(torch.from_numpy(x_test).type(torch.float),torch.from_numpy(y_test.values).type(torch.float))
 # Загрузка данных
-train_loader = DataLoader(train_dataset, 64)
-test_loader = DataLoader(test_dataset, 64)
-block = ffb.FeedForwardBlock(1,64,1)
+train_loader = DataLoader(train_dataset,len(x_test))
+test_loader = DataLoader(test_dataset, len(x_test))
+block = ffb.FeedForwardBlock(1,len(x_test),1)
 
 #Тренировка
-trainedNN = block.train(5,block.model,block.criterion,block.optimizer,train_loader,device)
-print(x_train)
-#plt.scatter(x_test, trainedNN, color='red', marker='x')
+trainedNN = block.train(500,block.model,block.criterion,block.optimizer,train_loader,device)
+print(trainedNN)
+#plt.scatter(x_test, trainedNN.detach().numpy, color='red', marker='x')
 #plt.scatter(x_test, y_test, color='blue', marker='o')
 # plt.title('Boston house prices')
 # plt.xlabel('LSTAT')
