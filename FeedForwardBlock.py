@@ -5,9 +5,9 @@ import FeedForwardNN as ffnn
 
 #Моноблок
 class FeedForwardBlock():
-    def __init__(self,inputSize=1, outputSize=1, numberOfLayers=1):
+    def __init__(self,inputSize=1, numberOfNeurons=1, numberOfLayers=1):
         super().__init__()
-        self.model = ffnn.FeedForwardNN(inputSize, numberOfNeurons=outputSize,numberOfLayers=numberOfLayers, activationFunction=1)
+        self.model = ffnn.FeedForwardNN(inputSize, numberOfNeurons=numberOfNeurons,numberOfLayers=numberOfLayers, activationFunction=1)
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(params=self.model.parameters(), lr=0.001)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -19,10 +19,10 @@ class FeedForwardBlock():
             for i, (images, labels) in enumerate(train_dataloader):  
                 outputs = model(images)
                 loss = criterion(outputs, labels)
+                print('Epoch: ', epoch, 'Loss: ', loss.item())
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step() 
-        return outputs
     
     # Валидация
     def evaluate(model,criterion, val_loader, device):

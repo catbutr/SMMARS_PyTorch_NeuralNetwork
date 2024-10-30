@@ -23,18 +23,19 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 scaler = StandardScaler()
 x_train = scaler.fit_transform(x_train)
 x_test = scaler.transform(x_test) 
-print("Среднее значение после нормализации:", x_train.mean(axis=0)) # должно быть близкое к 0
-print("Стандартное отклонение после нормализации:", x_train.std(axis=0)) # должно быть близкое к 1
+#print("Среднее значение после нормализации:", x_train.mean(axis=0)) # должно быть близкое к 0
+#print("Стандартное отклонение после нормализации:", x_train.std(axis=0)) # должно быть близкое к 1
 train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
 test_dataset = TensorDataset(torch.from_numpy(x_test).type(torch.float),torch.from_numpy(y_test.values).type(torch.float))
 # Загрузка данных
 train_loader = DataLoader(train_dataset,len(x_test))
 test_loader = DataLoader(test_dataset, len(x_test))
-block = ffb.FeedForwardBlock(1,len(x_test),1)
+block = ffb.FeedForwardBlock(1,len(x_test),2)
 
 #Тренировка
-trainedNN = block.train(500,block.model,block.criterion,block.optimizer,train_loader,device)
-print(trainedNN)
+block.train(100,block.model,block.criterion,block.optimizer,train_loader,device)
+print(block.model)
+#block.model(x_test)
 #plt.scatter(x_test, trainedNN.detach().numpy, color='red', marker='x')
 #plt.scatter(x_test, y_test, color='blue', marker='o')
 # plt.title('Boston house prices')
