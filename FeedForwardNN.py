@@ -24,5 +24,6 @@ class FeedForwardNN(nn.Module):
 
     def forward(self, x):
         for layer in self.layers:
+            print(layer)
             x = layer(x)
         return x

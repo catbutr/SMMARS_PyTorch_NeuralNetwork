@@ -28,13 +28,12 @@ x_test = scaler.transform(x_test)
 train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
 test_dataset = TensorDataset(torch.from_numpy(x_test).type(torch.float),torch.from_numpy(y_test.values).type(torch.float))
 # Загрузка данных
-train_loader = DataLoader(train_dataset,len(x_test))
-test_loader = DataLoader(test_dataset, len(x_test))
-block = ffb.FeedForwardBlock(1,len(x_test),2)
+train_loader = DataLoader(train_dataset,102)
+test_loader = DataLoader(test_dataset,102)
+block = ffb.FeedForwardBlock(len(x_test),len(x_test),2)
 
 #Тренировка
 block.train(100,block.model,block.criterion,block.optimizer,train_loader,device)
-print(block.model)
 #block.model(x_test)
 #plt.scatter(x_test, trainedNN.detach().numpy, color='red', marker='x')
 #plt.scatter(x_test, y_test, color='blue', marker='o')
