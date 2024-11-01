@@ -9,7 +9,7 @@ class FeedForwardBlock():
         super().__init__()
         self.model = ffnn.FeedForwardNN(inputSize, numberOfNeurons=numberOfNeurons,numberOfLayers=numberOfLayers, activationFunction=1)
         self.criterion = nn.MSELoss()
-        self.optimizer = optim.SGD(params=self.model.parameters(), lr=0.001)
+        self.optimizer = optim.Adam(params=self.model.parameters(), lr=0.001)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     #Тренировка

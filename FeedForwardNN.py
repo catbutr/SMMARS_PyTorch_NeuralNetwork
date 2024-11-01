@@ -20,7 +20,7 @@ class FeedForwardNN(nn.Module):
         else:
             stack.append(nn.Linear(numberOfNeurons,1))
         seq_stack = nn.Sequential(*stack)
-        self.layers = nn.ModuleList([nn.Flatten(), seq_stack])
+        self.layers = nn.ModuleList(seq_stack)
 
     def forward(self, x):
         for layer in self.layers:
