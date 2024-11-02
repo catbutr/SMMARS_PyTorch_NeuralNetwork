@@ -30,7 +30,7 @@ test_dataset = TensorDataset(torch.from_numpy(x_test).type(torch.float),torch.fr
 # Загрузка данных
 train_loader = DataLoader(train_dataset,256)
 test_loader = DataLoader(test_dataset,256)
-block = ffb.FeedForwardBlock(1,512,10)
+block = ffb.FeedForwardBlock(inputSize=1,hiddenSize=512,outputSize=1,numberOfLayers=2, optimizer=torch.optim.Adam(lr=0.001))
 
 #Тренировка
 block.train(100,block.model,block.criterion,block.optimizer,train_loader,device)
