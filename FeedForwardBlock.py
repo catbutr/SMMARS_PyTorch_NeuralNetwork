@@ -5,10 +5,12 @@ import FeedForwardNN as ffnn
 
 #Моноблок
 class FeedForwardBlock():
-    def __init__(self,inputSize=1, hiddenSize=1, outputSize=1, numberOfLayers=1,optimizer=optim.Adam(),criterion=nn.MSELoss()):
+    def __init__(self,inputSize=1, hiddenSize=1, outputSize=1, numberOfLayers=1,criterion=nn.MSELoss()):
         super().__init__()
         self.model = ffnn.FeedForwardNN(inputSize=inputSize, hiddenSize=hiddenSize, outputSize=outputSize ,numberOfLayers=numberOfLayers, activationFunction=1)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.optimizer = optim.Adam(params=self.model.parameters())
+        self.criterion = criterion
 
     #Тренировка
     def train(self,num_epochs, model, criterion, optimizer, train_dataloader, device):
