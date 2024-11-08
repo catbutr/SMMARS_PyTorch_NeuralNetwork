@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
+from torchsummary import summary
 import torch
 import FeedForwardBlock as ffb
 import TorchDataset as td
@@ -28,12 +29,13 @@ x_test = scaler.transform(x_test)
 train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
 test_dataset = TensorDataset(torch.from_numpy(x_test).type(torch.float),torch.from_numpy(y_test.values).type(torch.float))
 # Загрузка данных
-train_loader = DataLoader(train_dataset,256)
-test_loader = DataLoader(test_dataset,256)
-block = ffb.FeedForwardBlock(inputSize=1,hiddenSize=512,outputSize=1,numberOfLayers=2, criterion=torch.nn.MSELoss())
+train_loader = DataLoader(train_dataset,128)
+test_loader = DataLoader(test_dataset,128)
+block = ffb.FeedForwardBlock(inputSize=1,hiddenSize=128,outputSize=1,numberOfLayers=2, criterion=torch.nn.MSELoss())
 block.optimizer = torch.optim.Adam(params=block.model.parameters(),lr=0.001)
+summary(block.model, input_size=(1, 128, 1))
 
-#Тренировка
+# #Тренировка
 block.train(100,block.model,block.criterion,block.optimizer,train_loader,device)
 predict_y = block.model(torch.from_numpy(x_test).type(torch.float))
 plt.scatter(x_test, predict_y.detach().numpy(), color='red', marker='x')

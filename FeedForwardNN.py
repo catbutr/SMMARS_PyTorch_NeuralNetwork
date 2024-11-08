@@ -4,7 +4,7 @@ import ActivationFunctionEnum as af
 import ChooseActivationFunction as caf
 
 class FeedForwardNN(nn.Module):
-    def __init__(self, inputSize, hiddenSize, outputSize, numberOfLayers, activationFunction = af.ActivationFunctionEnum.ReLU):
+    def __init__(self, inputSize, hiddenSize, outputSize, numberOfLayers, activationFunction = af.ActivationFunctionEnum.Tahn):
         super().__init__()
         stack = []
         halfstack = hiddenSize//2
@@ -16,7 +16,7 @@ class FeedForwardNN(nn.Module):
                 stack.append(nn.Linear(halfstack,hiddenSize, dtype=torch.float32))
             stack.append(caf.chooseActivationFunction(activationFunction))
         if numberOfLayers%2 != 0:
-            stack.append(nn.Linear(halfstack,1))
+            stack.append(nn.Linear(halfstack,outputSize))
         else:
             stack.append(nn.Linear(hiddenSize,outputSize))
         seq_stack = nn.Sequential(*stack)
