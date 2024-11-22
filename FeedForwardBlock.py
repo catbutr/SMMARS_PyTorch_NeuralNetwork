@@ -15,14 +15,39 @@ class FeedForwardBlock():
     #Тренировка
     def train(self,num_epochs, model, criterion, optimizer, train_dataloader, device):
         model.train()
-        for epoch in range(num_epochs):
-            for i, (images, labels) in enumerate(train_dataloader):  
-                outputs = model(images)
-                loss = criterion(outputs, labels)
-                print('Epoch: ', epoch, 'Loss: ', loss.item())
+        for epoch in range(num_epochs): # 20 epochs at maximum
+            # Print epoch
+            print(f'Starting epoch {epoch+1}')
+            # Set current loss value
+            current_loss = 0.0
+            for i, data in enumerate(train_dataloader, 0):
+        
+                # Get and prepare inputs
+                inputs, targets = data
+                inputs, targets = inputs.float(), targets.float()
+                targets = targets.reshape((targets.shape[0], 1))
+
+                # Zero the gradients
                 optimizer.zero_grad()
+
+                # Perform forward pass
+                outputs = model(inputs)
+
+                # Compute loss
+                loss = criterion(outputs, targets)
+
+                # Perform backward pass
                 loss.backward()
-                optimizer.step() 
+
+                # Perform optimization
+                optimizer.step()
+
+                # Print statistics
+                current_loss += loss.item()
+                if i % 10 == 0:
+                    print('Loss after mini-batch %5d: %.3f' %
+                        (i + 1, current_loss / 500))
+                    current_loss = 0.0
     
     # Валидация
     def evaluate(model,criterion, val_loader, device):
