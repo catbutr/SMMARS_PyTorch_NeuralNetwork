@@ -65,8 +65,9 @@ if __name__ == '__main__':
     # Нормализация данных
     scaler = MinMaxScaler()
     data_scaled = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
-    feature_list = ['LSTAT']#,'RM'] # ---Сюда можно дописывать входные признаки
+    feature_list = ['LSTAT','RM'] # ---Сюда можно дописывать входные признаки
     inputs_count = len(feature_list) #это число определяет количество входов в нейронной сети
+    print(inputs_count)
     x = data_scaled[feature_list].to_numpy()
     y = data_scaled['MEDV'].to_numpy()
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42) 
