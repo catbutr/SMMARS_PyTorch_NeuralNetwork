@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import FeedForwardNN as ffnn
+from NeuralNetworkBlock import NeuralNetworkBlock as NNB
 
 #Моноблок
-class FeedForwardBlock():
+class FeedForwardBlock(NNB):
     def __init__(self,inputSize=1, hiddenSize=1, outputSize=1, numberOfLayers=1,criterion=nn.MSELoss()):
-        super().__init__()
+        super().__init__(criterion)
         self.model = ffnn.FeedForwardNN(inputSize=inputSize, hiddenSize=hiddenSize, outputSize=outputSize ,numberOfLayers=numberOfLayers, activationFunction=1)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.optimizer = optim.Adam(params=self.model.parameters())
