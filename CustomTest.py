@@ -9,6 +9,7 @@ from torchsummary import summary
 import torch
 import FeedForwardBlock as ffb
 import TorchDataset as td
+from CustomNN import CustomBlock as CB
 
 class BostonDataset(torch.utils.data.Dataset):
   '''
@@ -50,7 +51,8 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 train_dataset = BostonDataset(x_train, y_train)
 # Загрузка данных
 train_loader = DataLoader(train_dataset,batch_size=10, shuffle=True)
-block = ffb.FeedForwardBlock(inputSize=2,hiddenSize=128,outputSize=1,numberOfLayers=5, criterion=torch.nn.MSELoss())
+code = "nn.Linear(2,128)\nnn.Linear(128,64)\nnn.ReLU"
+block = CB(code_script=code, criterion=torch.nn.MSELoss())
 block.optimizer = torch.optim.Adam(params=block.model.parameters(),lr=0.001)
 #summary(block.model, input_size=(1, 128, 1))
 
@@ -65,8 +67,6 @@ x_test = pd.DataFrame(x_test, columns=[feature_list])
 # plt.ylabel('MEDV')
 # plt.legend(['Predicted', 'Actual'])
 # plt.show()
-print(np.shape(predict_y.detach().numpy()))
-print(np.shape(y_test))
 plt.scatter(x_test['LSTAT'], predict_y.detach().numpy(), color='red', marker='x')
 plt.scatter(x_test['LSTAT'], y_test, color='blue', marker='o')
 plt.title('Boston house prices')
