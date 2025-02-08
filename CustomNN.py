@@ -29,8 +29,8 @@ class CustomBlock(NNB):
         self.criterion = criterion
 
     #Тренировка
-    def train(self,num_epochs, model, criterion, optimizer, train_dataloader, device):
-        model.train()
+    def train(self,num_epochs, train_dataloader):
+        self.model.train()
         for epoch in range(num_epochs): # 20 epochs at maximum
             # Print epoch
             print(f'Starting epoch {epoch+1}')
@@ -44,19 +44,19 @@ class CustomBlock(NNB):
                 targets = targets.reshape((targets.shape[0], 1))
 
                 # Zero the gradients
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
 
                 # Perform forward pass
-                outputs = model(inputs)
+                outputs = self.model(inputs)
 
                 # Compute loss
-                loss = criterion(outputs, targets)
+                loss = self.criterion(outputs, targets)
 
                 # Perform backward pass
                 loss.backward()
 
                 # Perform optimization
-                optimizer.step()
+                self.optimizer.step()
 
                 # Print statistics
                 current_loss += loss.item()
