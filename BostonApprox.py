@@ -55,7 +55,7 @@ block.optimizer = torch.optim.Adam(params=block.model.parameters(),lr=0.001)
 #summary(block.model, input_size=(1, 128, 1))
 
 # #Тренировка
-block.train(100,block.model,block.criterion,block.optimizer,train_loader,device)
+block.train(100,train_loader)
 predict_y = block.model(torch.from_numpy(x_test).type(torch.float))
 x_test = pd.DataFrame(x_test, columns=[feature_list])
 # plt.scatter(x_test, predict_y.detach().numpy(), color='red', marker='x')
