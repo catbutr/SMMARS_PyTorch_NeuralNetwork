@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
-import ActivationFunctionEnum as af
-import ChooseActivationFunction as caf
+import Enums.ActivationFunctionEnum as af
+import Functions.ChooseActivationFunction as caf
 
 class FeedForwardNN(nn.Module):
     def __init__(self, inputSize, hiddenSize, outputSize, numberOfLayers, activationFunction = af.ActivationFunctionEnum.Tahn):

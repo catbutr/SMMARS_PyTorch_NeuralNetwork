@@ -1,36 +1,21 @@
-import torch.nn as nn
 import torch
-import ActivationFunctionEnum as af
-import ChooseActivationFunction as caf
+import torch.nn as nn
 import torch.optim as optim
-from NeuralNetworkBlock import NeuralNetworkBlock as NNB
+import Networks.FeedForwardNN as ffnn
+from Blocks.NeuralNetworkBlock import NeuralNetworkBlock as NNB
 
-class CustomNN(nn.Module):
-    def __init__(self, exec_script):
-        super().__init__()
-        stack = []
-        exec(exec_script)
-        seq_stack = nn.Sequential(*stack)
-        self.layers = nn.ModuleList(seq_stack)
-
-    def forward(self, x):
-        out = self.layers[0](x)
-        for layer in self.layers[1:]:
-            out = layer(out)
-        return out
-    
 #Моноблок
-class CustomBlock(NNB):
-    def __init__(self,code_script,criterion=nn.MSELoss()):
+class FeedForwardBlock(NNB):
+    def __init__(self,inputSize=1, hiddenSize=1, outputSize=1, numberOfLayers=1,criterion=nn.MSELoss()):
         super().__init__(criterion)
-        self.model = CustomNN(code_script)
+        self.model = ffnn.FeedForwardNN(inputSize=inputSize, hiddenSize=hiddenSize, outputSize=outputSize ,numberOfLayers=numberOfLayers, activationFunction=1)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.optimizer = optim.Adam(params=self.model.parameters())
         self.criterion = criterion
 
     #Тренировка
-    def train(self,num_epochs, model, criterion, optimizer, train_dataloader, device):
-        model.train()
+    def train(self,num_epochs, train_dataloader):
+        self.model.train()
         for epoch in range(num_epochs): # 20 epochs at maximum
             # Print epoch
             print(f'Starting epoch {epoch+1}')
@@ -44,19 +29,19 @@ class CustomBlock(NNB):
                 targets = targets.reshape((targets.shape[0], 1))
 
                 # Zero the gradients
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
 
                 # Perform forward pass
-                outputs = model(inputs)
+                outputs = self.model(inputs)
 
                 # Compute loss
-                loss = criterion(outputs, targets)
+                loss = self.criterion(outputs, targets)
 
                 # Perform backward pass
                 loss.backward()
 
                 # Perform optimization
-                optimizer.step()
+                self.optimizer.step()
 
                 # Print statistics
                 current_loss += loss.item()
@@ -66,10 +51,10 @@ class CustomBlock(NNB):
                     current_loss = 0.0
     
     # Валидация
-    def evaluate(model,criterion, val_loader, device):
-        model.eval()
+    def evaluate(self, val_loader):
+        self.model.eval()
         for val_input, val_targets in val_loader:
-            val_input, val_targets = val_input.to(device), val_targets.to(device)
-            out = model(val_input)
-            val_loss = criterion(out, val_targets)
+            val_input, val_targets = val_input.to(self.device), val_targets.to(self.device)
+            out = self.model(val_input)
+            val_loss = self.criterion(out, val_targets)
         return val_loss

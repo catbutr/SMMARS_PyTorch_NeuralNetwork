@@ -3,12 +3,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
 from torchsummary import summary
 import torch
-import FeedForwardBlock as ffb
-import TorchDataset as td
+import Blocks.FeedForwardBlock as ffb
 
 class BostonDataset(torch.utils.data.Dataset):
   '''

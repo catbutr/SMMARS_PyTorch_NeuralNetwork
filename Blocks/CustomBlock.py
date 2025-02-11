@@ -1,21 +1,21 @@
-import torch
 import torch.nn as nn
+import torch
 import torch.optim as optim
-import FeedForwardNN as ffnn
-from NeuralNetworkBlock import NeuralNetworkBlock as NNB
+from Blocks.NeuralNetworkBlock import NeuralNetworkBlock as NNB
+from Networks.CustomNN import CustomNN
 
 #Моноблок
-class FeedForwardBlock(NNB):
-    def __init__(self,inputSize=1, hiddenSize=1, outputSize=1, numberOfLayers=1,criterion=nn.MSELoss()):
+class CustomBlock(NNB):
+    def __init__(self,code_script,criterion=nn.MSELoss()):
         super().__init__(criterion)
-        self.model = ffnn.FeedForwardNN(inputSize=inputSize, hiddenSize=hiddenSize, outputSize=outputSize ,numberOfLayers=numberOfLayers, activationFunction=1)
+        self.model = CustomNN(code_script)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.optimizer = optim.Adam(params=self.model.parameters())
         self.criterion = criterion
 
     #Тренировка
-    def train(self,num_epochs, train_dataloader):
-        self.model.train()
+    def train(self,num_epochs, model, criterion, optimizer, train_dataloader, device):
+        model.train()
         for epoch in range(num_epochs): # 20 epochs at maximum
             # Print epoch
             print(f'Starting epoch {epoch+1}')
@@ -29,19 +29,19 @@ class FeedForwardBlock(NNB):
                 targets = targets.reshape((targets.shape[0], 1))
 
                 # Zero the gradients
-                self.optimizer.zero_grad()
+                optimizer.zero_grad()
 
                 # Perform forward pass
-                outputs = self.model(inputs)
+                outputs = model(inputs)
 
                 # Compute loss
-                loss = self.criterion(outputs, targets)
+                loss = criterion(outputs, targets)
 
                 # Perform backward pass
                 loss.backward()
 
                 # Perform optimization
-                self.optimizer.step()
+                optimizer.step()
 
                 # Print statistics
                 current_loss += loss.item()
@@ -51,10 +51,10 @@ class FeedForwardBlock(NNB):
                     current_loss = 0.0
     
     # Валидация
-    def evaluate(self, val_loader):
-        self.model.eval()
+    def evaluate(model,criterion, val_loader, device):
+        model.eval()
         for val_input, val_targets in val_loader:
-            val_input, val_targets = val_input.to(self.device), val_targets.to(self.device)
-            out = self.model(val_input)
-            val_loss = self.criterion(out, val_targets)
+            val_input, val_targets = val_input.to(device), val_targets.to(device)
+            out = model(val_input)
+            val_loss = criterion(out, val_targets)
         return val_loss

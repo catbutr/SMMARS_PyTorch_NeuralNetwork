@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import FeedForwardNN as ffnn
 import abc
 
 #Абстрактный класс моноблока
