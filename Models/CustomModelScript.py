@@ -1,4 +1,4 @@
-from ActivationFunctionEnum import ActivationFunctionEnum as activationFunction
+from Enums.ActivationFunctionEnum import ActivationFunctionEnum as activationFunction
 #Создание кода для создания слоёв модели нейронной сети
 class CustomModelScript():
     #script - текст кода

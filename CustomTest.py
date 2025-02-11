@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -6,8 +7,8 @@ from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
 import torch
 from Blocks.CustomBlock import CustomBlock as CB
-import CustomModelScript as CMS
-from ActivationFunctionEnum import ActivationFunctionEnum as activationFunction
+from Models.CustomModelScript import CustomModelScript
+from Enums.ActivationFunctionEnum import ActivationFunctionEnum as activationFunction
 
 class BostonDataset(torch.utils.data.Dataset):
   '''
@@ -49,7 +50,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 train_dataset = BostonDataset(x_train, y_train)
 # Загрузка данных
 train_loader = DataLoader(train_dataset,batch_size=10, shuffle=True)
-code = CMS.CustomModelScript()
+code = CustomModelScript()
 code.addLinearLayer(2,128)
 code.addLinearLayer(128,64)
 code.addActivationLayer(activationFunction.ReLU)
