@@ -19,8 +19,8 @@ class LSTM1(nn.Module):
 
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
                           num_layers=num_layers, batch_first=True) #lstm
-        self.fc_1 =  nn.Linear(hidden_size, 128) #fully connected 1
-        self.fc = nn.Linear(128, num_classes) #fully connected last layer
+        self.fc_1 =  nn.Linear(hidden_size, 512) #fully connected 1
+        self.fc = nn.Linear(512, num_classes) #fully connected last layer
 
         self.relu = nn.ReLU()
     
@@ -47,8 +47,8 @@ class RNN1(nn.Module):
 
         self.rnn = nn.RNN(input_size=input_size, hidden_size=hidden_size,
                           num_layers=num_layers, batch_first=True) #lstm
-        self.fc_1 =  nn.Linear(hidden_size, 128) #fully connected 1
-        self.fc = nn.Linear(128, num_classes) #fully connected last layer
+        self.fc_1 =  nn.Linear(hidden_size, 512) #fully connected 1
+        self.fc = nn.Linear(512, num_classes) #fully connected last layer
         self.relu = nn.ReLU()
     
     def forward(self,x):
@@ -73,8 +73,8 @@ class GRU1(nn.Module):
 
         self.rnn = nn.GRU(input_size=input_size, hidden_size=hidden_size,
                           num_layers=num_layers, batch_first=True) #lstm
-        self.fc_1 =  nn.Linear(hidden_size, 128) #fully connected 1
-        self.fc = nn.Linear(128, num_classes) #fully connected last layer
+        self.fc_1 =  nn.Linear(hidden_size, 512) #fully connected 1
+        self.fc = nn.Linear(512, num_classes) #fully connected last layer
         self.relu = nn.ReLU()
     
     def forward(self,x):
@@ -116,10 +116,10 @@ mm = MinMaxScaler()
 ss = StandardScaler()
 X_ss = ss.fit_transform(X)
 y_mm = mm.fit_transform(y) 
-X_train = X_ss[:180, :]
+X_train = X_ss[:90, :]
 X_test = X_ss[180:, :]
 
-y_train = y_mm[:180, :]
+y_train = y_mm[:90, :]
 y_test = y_mm[180:, :] 
 X_train_tensors = Variable(torch.Tensor(X_train))
 X_test_tensors = Variable(torch.Tensor(X_test))
@@ -130,7 +130,7 @@ y_test_tensors = Variable(torch.Tensor(y_test))
 X_train_tensors_final = torch.reshape(X_train_tensors,   (X_train_tensors.shape[0], 1, X_train_tensors.shape[1]))
 X_test_tensors_final = torch.reshape(X_test_tensors,  (X_test_tensors.shape[0], 1, X_test_tensors.shape[1])) 
 
-num_epochs = 5000 #1000 epochs
+num_epochs = 1000 #1000 epochs
 learning_rate = 0.001 #0.001 lr
 
 input_size = 5 #number of features
@@ -175,15 +175,14 @@ dataY_lstm = predict(lstm1,df_X_ss,mm)
 dataY_rnn = predict(rnn1,df_X_ss,mm)
 dataY_gru= predict(gru1,df_X_ss,mm)
 dataY_plot = mm.inverse_transform(dataY_plot)
-lstm_r2 = r2s(dataY_plot,dataY_lstm)
-rnn_r2 = r2s(dataY_plot,dataY_rnn)
-gru_r2 = r2s(dataY_plot,dataY_gru)
-
-print("Скорость: " + str('%.3f'%elapse_lstm) + "    " + str('%.3f'%elapse_rnn) + "  " + str('%.3f'%elapse_gru))
+lstm_r2 = r2s(dataY_plot[90:180, :],dataY_lstm[90:180, :])
+rnn_r2 = r2s(dataY_plot[90:180, :],dataY_rnn[90:180, :])
+gru_r2 = r2s(dataY_plot[90:180, :],dataY_gru[90:180, :])
 
 print("Точность: " + str('%.3f'%lstm_r2) + "    " + str('%.3f'%rnn_r2) + "  " + str('%.3f'%gru_r2))
+
 # plt.figure(figsize=(10,6)) #plotting
-# plt.axvline(x=180, c='r', linestyle='--') #size of the training set
+# plt.axvline(x=90, c='r', linestyle='--') #size of the training set
 
 # plt.plot(dataY_plot, label='Actual Data') #actual plot
 # plt.plot(dataY_lstm, label='LSTM Predicted Data') 
