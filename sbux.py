@@ -116,11 +116,11 @@ mm = MinMaxScaler()
 ss = StandardScaler()
 X_ss = ss.fit_transform(X)
 y_mm = mm.fit_transform(y) 
-X_train = X_ss[:200, :]
-X_test = X_ss[200:, :]
+X_train = X_ss[:180, :]
+X_test = X_ss[180:, :]
 
-y_train = y_mm[:200, :]
-y_test = y_mm[200:, :] 
+y_train = y_mm[:180, :]
+y_test = y_mm[180:, :] 
 X_train_tensors = Variable(torch.Tensor(X_train))
 X_test_tensors = Variable(torch.Tensor(X_test))
 
@@ -130,7 +130,7 @@ y_test_tensors = Variable(torch.Tensor(y_test))
 X_train_tensors_final = torch.reshape(X_train_tensors,   (X_train_tensors.shape[0], 1, X_train_tensors.shape[1]))
 X_test_tensors_final = torch.reshape(X_test_tensors,  (X_test_tensors.shape[0], 1, X_test_tensors.shape[1])) 
 
-num_epochs = 1000 #1000 epochs
+num_epochs = 5000 #1000 epochs
 learning_rate = 0.001 #0.001 lr
 
 input_size = 5 #number of features
@@ -179,21 +179,16 @@ lstm_r2 = r2s(dataY_plot,dataY_lstm)
 rnn_r2 = r2s(dataY_plot,dataY_rnn)
 gru_r2 = r2s(dataY_plot,dataY_gru)
 
-print("Время тренировки LSTM: " + str(elapse_lstm))
-print("Время тренировки RNN: " + str(elapse_rnn))
-print("Время тренировки GRU: " + str(elapse_gru))
+print("Скорость: " + str('%.3f'%elapse_lstm) + "    " + str('%.3f'%elapse_rnn) + "  " + str('%.3f'%elapse_gru))
 
-print("Точность LSTM: " + str(lstm_r2))
-print("Точность RNN: " + str(rnn_r2))
-print("Точность GRU: " + str(gru_r2))
+print("Точность: " + str('%.3f'%lstm_r2) + "    " + str('%.3f'%rnn_r2) + "  " + str('%.3f'%gru_r2))
+# plt.figure(figsize=(10,6)) #plotting
+# plt.axvline(x=180, c='r', linestyle='--') #size of the training set
 
-plt.figure(figsize=(10,6)) #plotting
-plt.axvline(x=200, c='r', linestyle='--') #size of the training set
-
-plt.plot(dataY_plot, label='Actual Data') #actual plot
-plt.plot(dataY_lstm, label='LSTM Predicted Data') 
-plt.plot(dataY_gru, label='GRU Predicted Data') 
-plt.plot(dataY_rnn, label='RNN Predicted Data') 
-plt.title('Time-Series Prediction')
-plt.legend()
-plt.show() 
+# plt.plot(dataY_plot, label='Actual Data') #actual plot
+# plt.plot(dataY_lstm, label='LSTM Predicted Data') 
+# plt.plot(dataY_gru, label='GRU Predicted Data') 
+# plt.plot(dataY_rnn, label='RNN Predicted Data') 
+# plt.title('Time-Series Prediction')
+# plt.legend()
+# plt.show() 
