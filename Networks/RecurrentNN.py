@@ -9,6 +9,11 @@ class extract_tensor(nn.Module):
         tensor, _ = x
         return tensor[:, -1, :]
 
+class extract_tensor(nn.Module):
+    def forward(self,x):
+        tensor, _ = x
+        return tensor[:, -1, :]
+
 class ReccurentNN(nn.Module):
     def __init__(self, inputSize, hiddenSize, outputSize, numberOfLayers, activationFunction = af.ActivationFunctionEnum.Tahn):
         super().__init__()
