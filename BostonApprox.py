@@ -5,7 +5,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
-from torchsummary import summary
 import torch
 import Blocks.FeedForwardBlock as ffb
 import Blocks.RecurrentBlock as rb
