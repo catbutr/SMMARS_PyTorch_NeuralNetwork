@@ -1,24 +1,20 @@
 import torch.nn as nn
-import torch
 import Enums.ActivationFunctionEnum as af
 import Functions.ChooseActivationFunction as caf
+
+class extract_tensor(nn.Module):
+    def forward(self,x):
+        tensor, _ = x
+        return tensor[:, -1, :]
 
 class ReccurentNN(nn.Module):
     def __init__(self, inputSize, hiddenSize, outputSize, numberOfLayers, activationFunction = af.ActivationFunctionEnum.Tahn):
         super().__init__()
         stack = []
-        halfstack = hiddenSize//2
-        stack.append(nn.Linear(inputSize,hiddenSize))
-        for i in range(0,numberOfLayers):
-            if i%2 == 0:
-                stack.append(nn.Linear(hiddenSize,halfstack, dtype=torch.float32))
-            else:
-                stack.append(nn.Linear(halfstack,hiddenSize, dtype=torch.float32))
-            stack.append(caf.chooseActivationFunction(activationFunction))
-        if numberOfLayers%2 != 0:
-            stack.append(nn.Linear(halfstack,outputSize))
-        else:
-            stack.append(nn.Linear(hiddenSize,outputSize))
+        stack.append(nn.LSTM(input_size=inputSize,hidden_size=hiddenSize,num_layers=numberOfLayers, batch_first=True))
+        stack.append(extract_tensor())
+        stack.append(nn.Linear(in_features=inputSize,out_features=outputSize))
+        stack.append(caf.chooseActivationFunction(activationFunction))
         seq_stack = nn.Sequential(*stack)
         self.layers = nn.ModuleList(seq_stack)
 
