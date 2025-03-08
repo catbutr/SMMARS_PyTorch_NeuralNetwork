@@ -15,7 +15,7 @@ class CNNDataset(torch.utils.data.Dataset):
       if scale_data:
           X = StandardScaler().fit_transform(X)
       self.X = torch.from_numpy(X).type(torch.float)
-      self.y = torch.from_numpy(y).type(torch.float)
+      self.y = torch.from_numpy(y).type(torch.LongTensor)
 
   def __len__(self):
       return len(self.X)
@@ -43,7 +43,6 @@ class ConvNN(nn.Module):
       return out
 
 num_epochs = 5 
-
 batch_size = 100 
 learning_rate = 0.001
 trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]) 
