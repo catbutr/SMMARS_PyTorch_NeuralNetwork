@@ -19,11 +19,11 @@ class BostonDataset(torch.utils.data.Dataset):
       if scale_data:
           X = StandardScaler().fit_transform(X)
       self.X = torch.from_numpy(X).type(torch.float)
-      self.y = torch.from_numpy(y).type(torch.float)
+      self.y = torch.from_numpy(y).type(torch.LongTensor)
 
   def __len__(self):
       return len(self.X)
-
+ 
   def __getitem__(self, i):
       return self.X[i], self.y[i]
 
@@ -31,12 +31,12 @@ class ConvNN(nn.Module):
     def __init__(self):
          super(ConvNN, self).__init__() 
          self.layer1 = nn.Sequential( nn.Conv1d(10, 32, kernel_size=5, stride=1, padding=2), 
-            nn.ReLU(), nn.MaxPool2d(kernel_size=2, stride=2)) 
+            nn.ReLU()) 
          self.layer2 = nn.Sequential( nn.Conv1d(32, 64, kernel_size=5, stride=1, padding=2), 
-            nn.ReLU(), nn.MaxPool2d(kernel_size=2, stride=2)) 
+            nn.ReLU()) 
          self.drop_out = nn.Dropout() 
-         self.fc1 = nn.Linear(7 * 7 * 64, 1000) 
-         self.fc2 = nn.Linear(1000, 10)
+         self.fc1 = nn.Linear(4, 10) 
+         self.fc2 = nn.Linear(10, 1)
 
     def forward(self, x):
       out = self.layer1(x) 
@@ -48,7 +48,7 @@ class ConvNN(nn.Module):
       return out
 
 num_epochs = 5 
-num_classes = 10 
+num_classes = 4 
 batch_size = 100 
 learning_rate = 0.001
 trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]) 
@@ -63,7 +63,8 @@ x = data[feature_list].to_numpy()
 y = data['Kc'].to_numpy()
 # Разделение данных на обучающую и тестовую выборки
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42) 
-x_train = x_train[:, :, newaxis]
+#x_train = x_train[:, :, newaxis]
+print(np.shape(x_train))
 #print("Среднее значение после нормализации:", x_train.mean(axis=0)) # должно быть близкое к 0
 #print("Стандартное отклонение после нормализации:", x_train.std(axis=0)) # должно быть близкое к 1
 #train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
@@ -74,7 +75,7 @@ train_loader = DataLoader(train_dataset,batch_size=10, shuffle=True)
 test_loader = DataLoader(test_dataset,batch_size=10, shuffle=True)
 
 model = ConvNN()
-criterion = nn.CrossEntropyLoss()
+criterion = nn.BCELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 total_step = len(train_loader)
 loss_list = []
