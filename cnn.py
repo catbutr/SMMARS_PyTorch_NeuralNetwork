@@ -81,8 +81,21 @@ for epoch in range(num_epochs):
 
         # Обратное распространение и оптимизатор
         optimizer.zero_grad()
+        # Perform forward pass
+        outputs = model(inputs)
+
+        # Compute loss
+        loss = criterion(outputs, targets)
+        # Perform backward pass
         loss.backward()
+        # Perform optimization
         optimizer.step()
+        # Print statistics
+        # current_loss += loss.item()
+        if i % 10 == 0:
+            print('Loss after mini-batch %5d: %.3f' %
+                  (i + 1, current_loss / 500))
+            current_loss = 0.0
 
         # Отслеживание точности
         total = labels.size(0)
