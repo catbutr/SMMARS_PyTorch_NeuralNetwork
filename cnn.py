@@ -10,13 +10,12 @@ from torch.utils.data import Dataset
 import numpy as np
 from numpy import zeros, newaxis
 class CNNDataset(torch.utils.data.Dataset):
-
   def __init__(self, X, y, scale_data=False):
     if not torch.is_tensor(X) and not torch.is_tensor(y):
       if scale_data:
           X = StandardScaler().fit_transform(X)
       self.X = torch.from_numpy(X).type(torch.float)
-      self.y = torch.from_numpy(y).type(torch.LongTensor)
+      self.y = torch.from_numpy(y).type(torch.float)
 
   def __len__(self):
       return len(self.X)
@@ -27,12 +26,12 @@ class CNNDataset(torch.utils.data.Dataset):
 class ConvNN(nn.Module):
     def __init__(self):
          super(ConvNN, self).__init__() 
-         self.layer1 = nn.Sequential( nn.Conv1d(4, 64, kernel_size=5, stride=1, padding=2), 
+         self.layer1 = nn.Sequential( nn.Conv1d(4, 32, kernel_size=5, stride=1, padding=2), 
             nn.ReLU(), nn.MaxPool1d(1,1)) 
-         self.layer2 = nn.Sequential( nn.Conv1d(64, 32, kernel_size=5, stride=1, padding=2), 
+         self.layer2 = nn.Sequential( nn.Conv1d(32, 64, kernel_size=5, stride=1, padding=2), 
             nn.ReLU(), nn.MaxPool1d(1,1)) 
          self.drop_out = nn.Dropout() 
-         self.out = nn.Linear(32, 1) 
+         self.out = nn.Linear(64, 1) 
 
     def forward(self, x):
       out = self.layer1(x) 
@@ -40,6 +39,7 @@ class ConvNN(nn.Module):
       out = out.reshape(out.size(0), -1) 
       out = self.drop_out(out) 
       out = self.out(out) 
+      print(np.shape(out))
       return out
 
 num_epochs = 5 
@@ -60,7 +60,6 @@ y = data['Kc'].to_numpy()
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42) 
 x_train = x_train[:, :, newaxis]
 x_test = x_test[:, :, newaxis]
-print(np.shape(x_train))
 train_dataset = CNNDataset(x_train, y_train)
 test_dataset = CNNDataset(x_test,y_test)
 # Загрузка данных
@@ -70,34 +69,33 @@ test_loader = DataLoader(test_dataset,batch_size=batch_size, shuffle=True)
 model = ConvNN()
 criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-for epoch in range(num_epochs): # 20 epochs at maximum
-    # Print epoch
-    print(f'Starting epoch {epoch+1}')
-    # Set current loss value
-    current_loss = 0.0
-    for i, data in enumerate(train_loader, 0):
-    # Get and prepare inputs
-        inputs, targets = data
-        inputs, targets = inputs.float(), targets.float()
-        targets = targets.reshape((targets.shape[0], 1))
-        # Zero the gradients
+total_step = len(train_loader)
+loss_list = []
+acc_list = []
+for epoch in range(num_epochs):
+    for i, (images, labels) in enumerate(train_loader):
+        # Прямой запуск
+        outputs = model(images)
+        outputs = outputs.squeeze(-1)
+        loss = criterion(outputs, labels)
+        loss_list.append(loss.item())
+
+        # Обратное распространение и оптимизатор
         optimizer.zero_grad()
-        # Perform forward pass
-        outputs = model(inputs)
-
-        # Compute loss
-        loss = criterion(outputs, targets)
-        # Perform backward pass
         loss.backward()
-        # Perform optimization
         optimizer.step()
-        # Print statistics
-        # current_loss += loss.item()
-        if i % 10 == 0:
-            print('Loss after mini-batch %5d: %.3f' %
-                  (i + 1, current_loss / 500))
-            current_loss = 0.0
 
+        # Отслеживание точности
+        total = labels.size(0)
+        print(np.shape(outputs.data))
+        _, predicted = torch.max(outputs, 0)
+        correct = (predicted == labels).sum().item()
+        acc_list.append(correct / total)
+
+        if (i + 1) % 100 == 0:
+            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                  .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
+                          (correct / total) * 100))
 model.eval()
 with torch.no_grad():
     correct = 0
@@ -108,4 +106,5 @@ with torch.no_grad():
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
 
-    print('Точность: {} %'.format((correct / total) * 100))
+print('Точность: {} %'.format((correct / total) * 100))
+predict = model(x_test)

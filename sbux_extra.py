@@ -6,6 +6,7 @@ import torch #pytorch
 import torch.nn as nn
 from torch.autograd import Variable 
 from sklearn.metrics import r2_score as r2s 
+from sklearn.metrics import mean_absolute_error as mae
 import time as time
 
 class LSTM1(nn.Module):
@@ -111,7 +112,11 @@ def predict(model, train, mm):
 df = pd.read_csv("sbux.csv", index_col = "Date", parse_dates=True)
 plt.style.use("ggplot")
 X = df.iloc[:, :-1]
-y = df.iloc[:, 5:6] 
+y = df.iloc[:, 5:6]  
+diff = np.append(np.diff(y.to_numpy(),axis=0),1)
+df.insert(5,'Diff', diff)
+X = df.iloc[:, :-1]
+y = df.iloc[:, 6:7]
 mm = MinMaxScaler()
 ss = StandardScaler()
 X_ss = ss.fit_transform(X)
@@ -133,7 +138,7 @@ X_test_tensors_final = torch.reshape(X_test_tensors,  (X_test_tensors.shape[0], 
 num_epochs = 1000 #1000 epochs
 learning_rate = 0.001 #0.001 lr
 
-input_size = 5 #number of features
+input_size = 6 #number of features
 hidden_size = 2 #number of features in hidden state
 num_layers = 1 #number of stacked lstm layers
 
@@ -175,11 +180,15 @@ dataY_lstm = predict(lstm1,df_X_ss,mm)
 dataY_rnn = predict(rnn1,df_X_ss,mm)
 dataY_gru= predict(gru1,df_X_ss,mm)
 dataY_plot = mm.inverse_transform(dataY_plot)
+#dataY_plot = np.diff(dataY_plot, n = -1)
 lstm_r2 = r2s(dataY_plot[90:180, :],dataY_lstm[90:180, :])
 rnn_r2 = r2s(dataY_plot[90:180, :],dataY_rnn[90:180, :])
 gru_r2 = r2s(dataY_plot[90:180, :],dataY_gru[90:180, :])
-
+lstm_mae = mae(dataY_plot[90:180, :],dataY_lstm[90:180, :])
+rnn_mae = mae(dataY_plot[90:180, :],dataY_rnn[90:180, :])
+gru_mae = mae(dataY_plot[90:180, :],dataY_gru[90:180, :])
 print("Точность: " + str('%.3f'%lstm_r2) + "    " + str('%.3f'%rnn_r2) + "  " + str('%.3f'%gru_r2))
+print("MAE: " + str('%.3f'%lstm_mae) + "    " + str('%.3f'%rnn_mae) + "  " + str('%.3f'%gru_mae))
 
 # plt.figure(figsize=(10,6)) #plotting
 # plt.axvline(x=90, c='r', linestyle='--') #size of the training set
