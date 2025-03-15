@@ -187,13 +187,13 @@ print("Скорость: " + str('%.3f'%elapse_lstm) + "    " + str('%.3f'%elaps
 print("Точность: " + str('%.3f'%lstm_r2) + "    " + str('%.3f'%rnn_r2) + "  " + str('%.3f'%gru_r2))
 
 print("MAE: " + str('%.3f'%lstm_mae) + "    " + str('%.3f'%rnn_mae) + "  " + str('%.3f'%gru_mae))
-# plt.figure(figsize=(10,6)) #plotting
-# plt.axvline(x=180, c='r', linestyle='--') #size of the training set
+plt.figure(figsize=(10,6)) #plotting
+plt.axvline(x=180, c='r', linestyle='--') #size of the training set
 
-# plt.plot(dataY_plot, label='Actual Data') #actual plot
-# plt.plot(dataY_lstm, label='LSTM Predicted Data') 
+plt.plot(dataY_plot, label='Actual Data') #actual plot
+plt.plot(dataY_lstm, label='LSTM Predicted Data') 
 # plt.plot(dataY_gru, label='GRU Predicted Data') 
 # plt.plot(dataY_rnn, label='RNN Predicted Data') 
-# plt.title('Time-Series Prediction')
-# plt.legend()
-# plt.show() 
+plt.title('Time-Series Prediction')
+plt.legend()
+plt.show() 
