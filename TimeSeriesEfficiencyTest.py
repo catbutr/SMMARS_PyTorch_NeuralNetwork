@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import mean_absolute_error as mae
 from sklearn.metrics import r2_score as r2s
 import matplotlib.pyplot as plt
+import time as time
 
 class LSTMModel(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, dropout=0.2):
@@ -113,7 +114,7 @@ hidden_size = 128  # Increased number of hidden units
 output_size = 1
 dropout = 0.2  # Added dropout for regularization
 
-model = GRUModel(input_size, hidden_size, num_layers, dropout).to(device)
+model = RNNModel(input_size, hidden_size, num_layers, dropout).to(device)
 loss_fn = nn.MSELoss(reduction='mean')
 optimizer = optim.Adam(model.parameters(), lr=1e-3)  # Learning rate
 
@@ -126,7 +127,7 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 num_epochs = 10  # Increased number of epochs
 train_hist = []
 test_hist = []
-
+start_time = time.time()
 for epoch in range(num_epochs):
     total_loss = 0.0
     model.train()
@@ -160,6 +161,9 @@ for epoch in range(num_epochs):
 
     if (epoch + 1) % 10 == 0:
         print(f'Epoch [{epoch + 1}/{num_epochs}] - Training Loss: {average_loss:.4f}, Test Loss: {average_test_loss:.4f}')
+        
+end_time = time.time()
+elapse_time = end_time - start_time
 x = np.linspace(1,num_epochs,num_epochs)
 num_forecast_steps = 30
 sequence_to_plot = X_test.squeeze().cpu().numpy()
@@ -188,8 +192,12 @@ with torch.no_grad():
 
 test_predictions = np.array(test_predictions)
 # Calculate RMSE and R² sco-re
-mae = mae(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
-r2 = r2s(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
-
-print(f'MAE: {mae:.4f}')
+mae_normal = mae(y_test.cpu().numpy(), test_predictions)
+r2 = r2s(y_test.cpu().numpy(), test_predictions)
+mae_extra = mae(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
+r2_extra = r2s(y_test.cpu().numpy()[-30:-1], test_predictions)
+print(f'Скорость тренировки: {elapse_time:.4f}')
+print(f'MAE: {mae_normal:.4f}')
 print(f'R² Score: {r2:.4f}')
+print(f'MAE Extra: {mae_extra:.4f}')
+print(f'R² Score Extra: {r2_extra:.4f}')
