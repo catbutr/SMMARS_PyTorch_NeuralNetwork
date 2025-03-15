@@ -114,7 +114,7 @@ hidden_size = 128  # Increased number of hidden units
 output_size = 1
 dropout = 0.2  # Added dropout for regularization
 
-model = GRUModel(input_size, hidden_size, num_layers, dropout).to(device)
+model = RNNModel(input_size, hidden_size, num_layers, dropout).to(device)
 loss_fn = nn.MSELoss(reduction='mean')
 optimizer = optim.Adam(model.parameters(), lr=1e-3)  # Learning rate
 
