@@ -114,7 +114,7 @@ hidden_size = 128  # Increased number of hidden units
 output_size = 1
 dropout = 0.2  # Added dropout for regularization
 
-model = RNNModel(input_size, hidden_size, num_layers, dropout).to(device)
+model = GRUModel(input_size, hidden_size, num_layers, dropout).to(device)
 loss_fn = nn.MSELoss(reduction='mean')
 optimizer = optim.Adam(model.parameters(), lr=1e-3)  # Learning rate
 
@@ -124,7 +124,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_dataset = TensorDataset(X_test, y_test)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-num_epochs = 10  # Increased number of epochs
+num_epochs = 100  # Increased number of epochs
 train_hist = []
 test_hist = []
 start_time = time.time()
@@ -179,9 +179,13 @@ with torch.no_grad():
         historical_data[-1] = predicted_value
 
 last_date = test_data.index[-1]
+<<<<<<< HEAD
 future_dates = pd.date_range(start=last_date + pd.DateOffset(1), periods=30)
 print(np.shape(future_dates))
 print(np.shape(y_test.cpu().numpy()[-30:-1]))
+=======
+
+>>>>>>> 7c0f5beb69ba30052ed9132a36c52982bf213b1e
 # Evaluate the model and calculate RMSE and R² score
 model.eval()
 with torch.no_grad():
@@ -196,10 +200,15 @@ test_predictions = np.array(test_predictions)
 # Calculate RMSE and R² sco-re
 mae_normal = mae(y_test.cpu().numpy(), test_predictions)
 r2 = r2s(y_test.cpu().numpy(), test_predictions)
+<<<<<<< HEAD
 mae_extra = mae(test_to_numpy, future_dates)
 r2_extra = r2s(test_to_numpy, future_dates)
+=======
+mae_extra = mae(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
+r2_extra = r2s(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
+>>>>>>> 7c0f5beb69ba30052ed9132a36c52982bf213b1e
 print(f'Скорость тренировки: {elapse_time:.4f}')
-print(f'MAE: {mae_normal:.4f}')
 print(f'R² Score: {r2:.4f}')
-print(f'MAE Extra: {mae_extra:.4f}')
+print(f'MAE: {mae_normal:.4f}')
 print(f'R² Score Extra: {r2_extra:.4f}')
+print(f'MAE Extra: {mae_extra:.4f}')
