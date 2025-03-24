@@ -180,7 +180,8 @@ with torch.no_grad():
 
 last_date = test_data.index[-1]
 future_dates = pd.date_range(start=last_date + pd.DateOffset(1), periods=30)
-
+print(np.shape(future_dates))
+print(np.shape(y_test.cpu().numpy()[-30:-1]))
 # Evaluate the model and calculate RMSE and R² score
 model.eval()
 with torch.no_grad():
@@ -189,13 +190,14 @@ with torch.no_grad():
     for batch_X_test in X_test:
         batch_X_test = batch_X_test.to(device).unsqueeze(0)  # Add batch dimension
         test_predictions.append(model(batch_X_test).cpu().numpy().flatten()[0])
-
+test_to_numpy = y_test.cpu().numpy()[-31:-1,:]
+np.reshape(test_to_numpy,(30,))
 test_predictions = np.array(test_predictions)
 # Calculate RMSE and R² sco-re
 mae_normal = mae(y_test.cpu().numpy(), test_predictions)
 r2 = r2s(y_test.cpu().numpy(), test_predictions)
-mae_extra = mae(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
-r2_extra = r2s(y_test.cpu().numpy()[-30:-1], test_predictions)
+mae_extra = mae(test_to_numpy, future_dates)
+r2_extra = r2s(test_to_numpy, future_dates)
 print(f'Скорость тренировки: {elapse_time:.4f}')
 print(f'MAE: {mae_normal:.4f}')
 print(f'R² Score: {r2:.4f}')
