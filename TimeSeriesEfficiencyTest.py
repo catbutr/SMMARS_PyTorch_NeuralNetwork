@@ -1,159 +1,204 @@
+import yfinance as yf
+from datetime import date
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
-from torchsummary import summary
+import matplotlib.dates as mdates
+import math
+from sklearn.preprocessing import MinMaxScaler
 import torch
-import seaborn as sns
 import torch.nn as nn
 import torch.optim as optim
-import Blocks.FeedForwardBlock as ffb
-from Blocks.NeuralNetworkBlock import NeuralNetworkBlock as NNB
-from torch.autograd import Variable 
-
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.metrics import mean_absolute_error as mae
+from sklearn.metrics import r2_score as r2s
+import matplotlib.pyplot as plt
+import time as time
 
 class LSTMModel(nn.Module):
-    def __init__(self, num_classes, input_size, hidden_size, num_layers, seq_length):
+    def __init__(self, input_size, hidden_size, num_layers, dropout=0.2):
         super(LSTMModel, self).__init__()
-        self.num_classes = num_classes #number of classes
-        self.num_layers = num_layers #number of layers
-        self.input_size = input_size #input size
-        self.hidden_size = hidden_size #hidden state
-        self.seq_length = seq_length #sequence length
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout)
+        self.linear = nn.Linear(hidden_size, 1)
 
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                          num_layers=num_layers, batch_first=True) #lstm
-        self.fc_1 =  nn.Linear(hidden_size, 128) #fully connected 1
-        self.fc = nn.Linear(128, num_classes) #fully connected last layer
-
-        self.relu = nn.ReLU()
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out = self.linear(out[:, -1, :])
+        return out
     
-    def forward(self,x):
-        h_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)) #hidden state
-        c_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)) #internal state
-        # Propagate input through LSTM
-        output, (hn, cn) = self.lstm(x, (h_0, c_0)) #lstm with input, hidden, and internal state
-        hn = hn.view(-1, self.hidden_size) #reshaping the data for Dense layer next
-        out = self.relu(hn)
-        out = self.fc_1(out) #first Dense
-        out = self.relu(out) #relu
-        out = self.fc(out) #Final Output
+class GRUModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, dropout=0.2):
+        super(GRUModel, self).__init__()
+        self.lstm = nn.GRU(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout)
+        self.linear = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out = self.linear(out[:, -1, :])
+        return out
+    
+class RNNModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, dropout=0.2):
+        super(RNNModel, self).__init__()
+        self.lstm = nn.RNN(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout)
+        self.linear = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out = self.linear(out[:, -1, :])
         return out
 
-#Моноблок
-class LSTMBlock(NNB):
-    def __init__(self,inputSize=1, hiddenSize=1, numberOfLayers=1,criterion=nn.MSELoss(), numClasses=1,seqLen=1):
-        super().__init__(criterion)
-        self.model = LSTMModel(num_classes=numClasses,hidden_size=hiddenSize, input_size=inputSize, num_layers=numberOfLayers,seq_length=seqLen)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.optimizer = optim.Adam(params=self.model.parameters())
-        self.criterion = criterion
+end_date = date.today().strftime("%Y-%m-%d")
+start_date = '1990-01-01'
 
-    #Тренировка
-    def train(self,num_epochs, train_dataloader):
-        self.model.train()
-        for epoch in range(num_epochs): # 20 epochs at maximum
-            # Print epoch
-            print(f'Starting epoch {epoch+1}')
-            # Set current loss value
-            current_loss = 0.0
-            for i, data in enumerate(train_dataloader, 0):
+df = yf.download('AAPL', start=start_date, end=end_date)
+
+# Train test split
+training_data_len = math.ceil(len(df) * .8)
+
+
+# Splitting the dataset
+train_data = df[:training_data_len].iloc[:, :1]
+test_data = df[training_data_len:].iloc[:, :1]
+
+
+# Selecting Open Price values
+dataset_train = train_data.values
+# Reshaping 1D to 2D array
+dataset_train = np.reshape(dataset_train, (-1, 1))
+
+
+# Selecting Open Price values
+dataset_test = test_data.values
+# Reshaping 1D to 2D array
+dataset_test = np.reshape(dataset_test, (-1, 1))
+
+
+scaler = MinMaxScaler(feature_range=(0, 1))
+# Scaling dataset
+scaled_train = scaler.fit_transform(dataset_train)
+
+
+# Normalizing values between 0 and 1
+scaled_test = scaler.fit_transform(dataset_test)
+
+# Create sequences and labels for training data
+sequence_length = 50  # Number of time steps to look back
+X_train, y_train = [], []
+for i in range(len(scaled_train) - sequence_length):
+    X_train.append(scaled_train[i:i + sequence_length])
+    y_train.append(scaled_train[i + sequence_length])  # Predicting the value right after the sequence
+X_train, y_train = np.array(X_train), np.array(y_train)
+
+# Convert data to PyTorch tensors
+X_train = torch.tensor(X_train, dtype=torch.float32)
+y_train = torch.tensor(y_train, dtype=torch.float32)
+
+# Create sequences and labels for testing data
+sequence_length = 30  # Number of time steps to look back
+X_test, y_test = [], []
+for i in range(len(scaled_test) - sequence_length):
+    X_test.append(scaled_test[i:i + sequence_length])
+    y_test.append(scaled_test[i + sequence_length])  # Predicting the value right after the sequence
+X_test, y_test = np.array(X_test), np.array(y_test)
+
+# Convert data to PyTorch tensors
+X_test = torch.tensor(X_test, dtype=torch.float32)
+y_test = torch.tensor(y_test, dtype=torch.float32)
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+input_size = 1
+num_layers = 3  # Increased number of layers
+hidden_size = 128  # Increased number of hidden units
+output_size = 1
+dropout = 0.2  # Added dropout for regularization
+
+model = GRUModel(input_size, hidden_size, num_layers, dropout).to(device)
+loss_fn = nn.MSELoss(reduction='mean')
+optimizer = optim.Adam(model.parameters(), lr=1e-3)  # Learning rate
+
+batch_size = 32  # Adjusted batch size
+train_dataset = TensorDataset(X_train, y_train)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+test_dataset = TensorDataset(X_test, y_test)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+num_epochs = 100  # Increased number of epochs
+train_hist = []
+test_hist = []
+start_time = time.time()
+for epoch in range(num_epochs):
+    total_loss = 0.0
+    model.train()
+    for batch_X, batch_y in train_loader:
+        batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+        predictions = model(batch_X)
+        loss = loss_fn(predictions, batch_y)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    average_loss = total_loss / len(train_loader)
+    train_hist.append(average_loss)
+
+    model.eval()
+    with torch.no_grad():
+        total_test_loss = 0.0
+
+        for batch_X_test, batch_y_test in test_loader:
+            batch_X_test, batch_y_test = batch_X_test.to(device), batch_y_test.to(device)
+            predictions_test = model(batch_X_test)
+            test_loss = loss_fn(predictions_test, batch_y_test)
+
+            total_test_loss += test_loss.item()
+
+        average_test_loss = total_test_loss / len(test_loader)
+        test_hist.append(average_test_loss)
+
+    if (epoch + 1) % 10 == 0:
+        print(f'Epoch [{epoch + 1}/{num_epochs}] - Training Loss: {average_loss:.4f}, Test Loss: {average_test_loss:.4f}')
         
-                # Get and prepare inputs
-                inputs, targets = data
-                inputs, targets = inputs.float(), targets.float()
-                targets = targets.reshape((targets.shape[0], 1))
+end_time = time.time()
+elapse_time = end_time - start_time
+x = np.linspace(1,num_epochs,num_epochs)
+num_forecast_steps = 30
+sequence_to_plot = X_test.squeeze().cpu().numpy()
+historical_data = sequence_to_plot[-1]
 
-                # Zero the gradients
-                self.optimizer.zero_grad()
+forecasted_values = []
+with torch.no_grad():
+    for _ in range(num_forecast_steps):
+        historical_data_tensor = torch.as_tensor(historical_data).view(1, -1, 1).float().to(device)
+        predicted_value = model(historical_data_tensor).cpu().numpy()[0, 0]
+        forecasted_values.append(predicted_value)
+        historical_data = np.roll(historical_data, shift=-1)
+        historical_data[-1] = predicted_value
 
-                # Perform forward pass
-                outputs = self.model(inputs)
+last_date = test_data.index[-1]
+# Evaluate the model and calculate RMSE and R² score
+model.eval()
+with torch.no_grad():
+    test_predictions = []
 
-                # Compute loss
-                loss = self.criterion(outputs, targets)
-
-                # Perform backward pass
-                loss.backward()
-
-                # Perform optimization
-                self.optimizer.step()
-
-                # Print statistics
-                current_loss += loss.item()
-                if i % 10 == 0:
-                    print('Loss after mini-batch %5d: %.3f' %
-                        (i + 1, current_loss / 500))
-                    current_loss = 0.0
-    
-    # Валидация
-    def evaluate(self, val_loader):
-        self.model.eval()
-        for val_input, val_targets in val_loader:
-            val_input, val_targets = val_input.to(self.device), val_targets.to(self.device)
-            out = self.model(val_input)
-            val_loss = self.criterion(out, val_targets)
-        return val_loss
-
-
-class CommonDataset(torch.utils.data.Dataset):
-  '''
-  Prepare the Boston dataset for regression
-  '''
-
-  def __init__(self, X, y, scale_data=False):
-    if not torch.is_tensor(X) and not torch.is_tensor(y):
-      if scale_data:
-          X = StandardScaler().fit_transform(X)
-      self.X = torch.from_numpy(X)
-      self.y = torch.from_numpy(y)
-
-  def __len__(self):
-      return len(self.X)
-
-  def __getitem__(self, i):
-      return self.X[i], self.y[i]
-
-# Проверка устройства
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-# Загрузка данных
-data = sns.load_dataset("dowjones")
-print(data)
-# Нормализация данных
-scaler = MinMaxScaler()
-for col in data.columns:
-    data[col] = StandardScaler().fit_transform(data[col].to_numpy().reshape(-1,1))
-data_scaled = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
-feature_list = ['Price'] # ---Сюда можно дописывать входные признаки
-inputs_count = len(feature_list) #это число определяет количество входов в нейронной сети
-x = data_scaled[feature_list].to_numpy()
-y = data_scaled['Date'].to_numpy()
-# Разделение данных на обучающую и тестовую выборки
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42) 
-#print("Среднее значение после нормализации:", x_train.mean(axis=0)) # должно быть близкое к 0
-#print("Стандартное отклонение после нормализации:", x_train.std(axis=0)) # должно быть близкое к 1
-#train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
-train_dataset = CommonDataset(x_train, y_train)
-# Загрузка данных
-train_loader = DataLoader(train_dataset,batch_size=10, shuffle=True)
-block = LSTMBlock(inputSize=1,hiddenSize=256,numberOfLayers=1, criterion=torch.nn.MSELoss())
-block.optimizer = torch.optim.Adam(params=block.model.parameters(),lr=0.001)
-#summary(block.model, input_size=(1, 128, 1))
-
-# #Тренировка
-block.train(100,train_loader)
-predict_y = block.model(torch.from_numpy(x_test).type(torch.float))
-x_test = pd.DataFrame(x_test, columns=[feature_list])
-print(block.model.parameters)
-
-plt.scatter(x_test['Price'], predict_y.detach().numpy(), color='red', marker='x')
-plt.scatter(x_test['Price'], y_test, color='blue', marker='o')
-plt.title('Test')
-plt.xlabel('Price')
-plt.ylabel('Date')
-plt.legend(['Predicted', 'Actual'])
-plt.show()
+    for batch_X_test in X_test:
+        batch_X_test = batch_X_test.to(device).unsqueeze(0)  # Add batch dimension
+        test_predictions.append(model(batch_X_test).cpu().numpy().flatten()[0])
+test_to_numpy = y_test.cpu().numpy()[-31:-1,:]
+np.reshape(test_to_numpy,(30,))
+test_predictions = np.array(test_predictions)
+# Calculate RMSE and R² sco-re
+mae_normal = mae(y_test.cpu().numpy(), test_predictions)
+r2 = r2s(y_test.cpu().numpy(), test_predictions)
+mae_extra = mae(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
+r2_extra = r2s(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
+mae_extra = mae(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
+r2_extra = r2s(y_test.cpu().numpy()[-30:-1], test_predictions[-30:-1])
+print(f'Скорость тренировки: {elapse_time:.4f}')
+print(f'R² Score: {r2:.4f}')
+print(f'MAE: {mae_normal:.4f}')
+print(f'R² Score Extra: {r2_extra:.4f}')
+print(f'MAE Extra: {mae_extra:.4f}')

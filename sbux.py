@@ -7,6 +7,7 @@ import torch.nn as nn
 from torch.autograd import Variable 
 from sklearn.metrics import r2_score as r2s 
 import time as time
+from sklearn.metrics import mean_absolute_error as mae
 
 class LSTM1(nn.Module):
     def __init__(self, num_classes, input_size, hidden_size, num_layers, seq_length):
@@ -174,17 +175,20 @@ dataY_plot = mm.inverse_transform(dataY_plot)
 lstm_r2 = r2s(dataY_plot,dataY_lstm)
 rnn_r2 = r2s(dataY_plot,dataY_rnn)
 gru_r2 = r2s(dataY_plot,dataY_gru)
-
+lstm_mae = mae(dataY_plot[90:180, :],dataY_lstm[90:180, :])
+rnn_mae = mae(dataY_plot[90:180, :],dataY_rnn[90:180, :])
+gru_mae = mae(dataY_plot[90:180, :],dataY_gru[90:180, :])
 print("Скорость: " + str('%.3f'%elapse_lstm) + "    " + str('%.3f'%elapse_rnn) + "  " + str('%.3f'%elapse_gru))
 
 print("Точность: " + str('%.3f'%lstm_r2) + "    " + str('%.3f'%rnn_r2) + "  " + str('%.3f'%gru_r2))
+print("MAE: " + str('%.3f'%lstm_mae) + "    " + str('%.3f'%rnn_mae) + "  " + str('%.3f'%gru_mae))
 plt.figure(figsize=(10,6)) #plotting
 plt.axvline(x=180, c='r', linestyle='--') #size of the training set
 
 plt.plot(dataY_plot, label='Actual Data') #actual plot
 plt.plot(dataY_lstm, label='LSTM Predicted Data') 
-plt.plot(dataY_gru, label='GRU Predicted Data') 
-plt.plot(dataY_rnn, label='RNN Predicted Data') 
+# plt.plot(dataY_gru, label='GRU Predicted Data') 
+# plt.plot(dataY_rnn, label='RNN Predicted Data') 
 plt.title('Time-Series Prediction')
 plt.legend()
 plt.show() 
