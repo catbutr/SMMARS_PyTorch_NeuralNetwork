@@ -52,11 +52,11 @@ train_dataset = BostonDataset(x_train, y_train)
 train_loader = DataLoader(train_dataset,batch_size=10, shuffle=True)
 block = rb.RecurrentBlock(inputSize=2,hiddenSize=128,outputSize=1,numberOfLayers=1, criterion=torch.nn.MSELoss())
 block.optimizer = torch.optim.Adam(params=block.model.parameters(),lr=0.001)
-#summary(block.model, input_size=(1, 128, 1))
-
 # #Тренировка
 block.train(100,train_loader)
+# Предугадывание
 predict_y = block.model(torch.from_numpy(x_test).type(torch.float))
+
 x_test = pd.DataFrame(x_test, columns=[feature_list])
 print(block.model.parameters)
 # plt.scatter(x_test, predict_y.detach().numpy(), color='red', marker='x')
