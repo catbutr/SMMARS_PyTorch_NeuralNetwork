@@ -19,60 +19,59 @@ def callback(sender, app_data, user_data):
 def FNN():
     with dpg.node(label="FeedForward NN"):
         with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_input_int(label="Input size", width=150)
-            dpg.add_input_int(label="Input size", width=150)
-            dpg.add_input_int(label="Hidden size", width=150)
-            dpg.add_input_int(label="Output size", width=150)
-            dpg.add_input_int(label="Number of layers", width=150)
-            dpg.add_combo(label="Activation Function", items=['ReLU','LReLU','Sigmoid','Tahn','SoftMax'], width=150)
+            dpg.add_input_int(label="Input size", width=150, tag="InputSize")
+            dpg.add_input_int(label="Hidden size", width=150,tag="HiddenSize")
+            dpg.add_input_int(label="Output size", width=150,tag="OutputSize")
+            dpg.add_input_int(label="Number of layers", width=150,tag="NumberOfLayers")
+            dpg.add_combo(label="Activation Function", items=['ReLU','LReLU','Sigmoid','Tahn','SoftMax'], width=150, tag="ActivationFunction")
 
 def File_Reader():
     with dpg.node(label="File Reader"):
         with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_button(label="File Selector", callback=lambda: dpg.show_item("file_dialog_id"))
+            dpg.add_button(label="File Selector", callback=lambda: dpg.show_item("file_dialog_id"), tag="FileSelectorFile")
 
 def Splitter():
     with dpg.node(label="Splitter"):
-        with dpg.node_attribute(label="input"):
+        with dpg.node_attribute(label="Input"):
             dpg.add_input_text(width=150, hint="Labels", tag = "InputLabels")
             dpg.add_input_text(width=150, hint="Features", tag="InputFeatures")
-            dpg.add_input_double(label="Test Size",width=150)
-            dpg.add_input_int(label="Random State",width=150)
+            dpg.add_input_double(label="Test Size",width=150, tag="TestSize")
+            dpg.add_input_int(label="Random State",width=150, tag="RandomState")
+        with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
+            dpg.add_text("Train_Features", tag="TrainFeatures")
         with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_text("Train_Features")
+            dpg.add_text("Train_Labels", tag="TrainLabels")
         with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_text("Train_Labels")
+            dpg.add_text("Test_Features", tag="TestFeatures")
         with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_text("Test_Features")
-        with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_text("Test_Labels")
+            dpg.add_text("Test_Labels", tag="TestLabels")
 
 def DataLoader(loaderType):
     with dpg.node(label=loaderType):
-        with dpg.node_attribute(label="input"):
-            dpg.add_text("feature_input")
-        with dpg.node_attribute(label="input"):
-            dpg.add_text("label_input")
-        with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_text("DataLoader")
+        with dpg.node_attribute(label="Input"):
+            dpg.add_text("features_input", tag="FeaturesInput")
+        with dpg.node_attribute(label="Input"):
+            dpg.add_text("labels_input", tag="LabelsInput")
+        with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
+            dpg.add_text("DataLoader", tag="DataLoader")
 
 def Train():
     with dpg.node(label="Trainer"):
-        with dpg.node_attribute(label="input"):
-            dpg.add_text("Model")
-        with dpg.node_attribute(label="input"):
-            dpg.add_text("Train DataLoader")
-        with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_input_int(label="Number of epochs", width=150)
+        with dpg.node_attribute(label="Input"):
+            dpg.add_text("Model", tag="ModelTrain")
+        with dpg.node_attribute(label="Input"):
+            dpg.add_text("Train DataLoader", tag="TrainDataloader")
+        with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
+            dpg.add_input_int(label="Number of epochs", width=150, tag="NumberOfEpochs")
 
 def Predict():
     with dpg.node(label="Predict"):
-        with dpg.node_attribute(label="input"):
-            dpg.add_text("Model")
-        with dpg.node_attribute(label="input"):
-            dpg.add_text("Test DataLoader")
+        with dpg.node_attribute(label="Input"):
+            dpg.add_text("Model", tag="ModelPredict")
+        with dpg.node_attribute(label="Input"):
+            dpg.add_text("Test DataLoader", tag="TestDataLoader")
         with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
-            dpg.add_text("Prediction results")
+            dpg.add_text("Prediction results", tag="PredictionResults")
 
 # creating data
 sindatax = []
