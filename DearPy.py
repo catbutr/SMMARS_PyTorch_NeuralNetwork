@@ -73,14 +73,6 @@ def Predict():
         with dpg.node_attribute(label="output", attribute_type=dpg.mvNode_Attr_Output):
             dpg.add_text("Prediction results", tag="PredictionResults")
 
-# creating data
-sindatax = []
-sindatay = []
-for i in range(0, 500):
-    sindatax.append(i / 1000)
-    sindatay.append(0.5 + 0.5)
-
-
 with dpg.file_dialog(directory_selector=False, show=False, callback=callback, id="file_dialog_id", width=700 ,height=400):
     dpg.add_file_extension(".csv", color=(255, 0, 255, 255), custom_text="[CSV]")
     dpg.add_file_extension(".xlsx", color=(0, 255, 0, 255), custom_text="[Excel]")
