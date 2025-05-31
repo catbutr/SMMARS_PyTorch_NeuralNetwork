@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 import torch
 import Blocks.FeedForwardBlock as ffb
 import Blocks.RecurrentBlock as rb
-
+from torch.utils.data import TensorDataset
 
 class BostonDataset(torch.utils.data.Dataset):
   '''
@@ -40,16 +40,21 @@ data_scaled = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
 feature_list = ['LSTAT'] # ---Сюда можно дописывать входные признаки
 inputs_count = len(feature_list) #это число определяет количество входов в нейронной сети
 x = data_scaled[feature_list].to_numpy()
+print(x.size)
 y = data_scaled['MEDV'].to_numpy()
+print(y.size)
 # Разделение данных на обучающую и тестовую выборки
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42) 
+x_reshaped = torch.reshape(torch.from_numpy(x_train), (torch.from_numpy(x_train).shape[0], 1, torch.from_numpy(x_train).shape[1])) 
+print(type(x_train))
+print(type(x_reshaped))
 #print("Среднее значение после нормализации:", x_train.mean(axis=0)) # должно быть близкое к 0
 #print("Стандартное отклонение после нормализации:", x_train.std(axis=0)) # должно быть близкое к 1
 #train_dataset = TensorDataset(torch.from_numpy(x_train).type(torch.float),torch.from_numpy(y_train.values).type(torch.float))
-train_dataset = BostonDataset(x_train, y_train)
+train_dataset = BostonDataset(x_reshaped.numpy(), y_train)
 # Загрузка данных
 train_loader = DataLoader(train_dataset,batch_size=10, shuffle=True)
-block = ffb.FeedForwardBlock(inputSize=1,hiddenSize=128,outputSize=1,numberOfLayers=1, criterion=torch.nn.MSELoss())
+block = rb.RecurrentBlock(inputSize=1,hiddenSize=128,outputSize=1,numberOfLayers=1, criterion=torch.nn.MSELoss())
 block.optimizer = torch.optim.Adam(params=block.model.parameters(),lr=0.001)
 # #Тренировка
 block.train(100,train_loader)

@@ -5,9 +5,11 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import torch #pytorch
 import torch.nn as nn
 from torch.autograd import Variable 
+from torch.utils.data import DataLoader
 from sklearn.metrics import r2_score as r2s 
 import time as time
 from sklearn.metrics import mean_absolute_error as mae
+from torch.utils.data import TensorDataset
 
 class LSTM1(nn.Module):
     def __init__(self, num_classes, input_size, hidden_size, num_layers, seq_length):
@@ -87,19 +89,32 @@ class GRU1(nn.Module):
         out = self.fc(out) 
         return out
 
-def train(model, criterion, optimizer, name):
-   for epoch in range(num_epochs):
-        outputs = model.forward(X_train_tensors_final) 
-        optimizer.zero_grad()
+def train(model, criterion, optimizer, num_epochs, train_laoder):
+    model.train()
+    for epoch in range(num_epochs):
+        # Print epoch
+        print(f'Starting epoch {epoch+1}')
+        # Set current loss value
+        current_loss = 0.0
+        for i, data in enumerate(train_laoder, 0):
+            # Get and prepare inputs
+            inputs, targets = data
+            inputs, targets = inputs.float(), targets.float()
+            outputs = model.forward(inputs) 
+            optimizer.zero_grad()
 
-        loss = criterion(outputs, y_train_tensors)
-        
-        loss.backward() 
-        
-        optimizer.step() 
-        if epoch % 100 == 0:
-            print("Epoch: %d, loss: %1.5f" % (epoch, loss.item())) 
-        end = time.time()
+            loss = criterion(outputs, targets)
+                
+            loss.backward() 
+                
+            optimizer.step() 
+            # Print statistics
+            current_loss += loss.item()
+            if i % 10 == 0:
+                print('Loss after mini-batch %5d: %.3f' %
+                    (i + 1, current_loss / 500))
+                current_loss = 0.0
+
 def predict(model, train, mm):
     train_predict = model(train)
     data_predict = train_predict.data.numpy() 
@@ -108,17 +123,20 @@ def predict(model, train, mm):
 
 df = pd.read_csv("sbux.csv", index_col = "Date", parse_dates=True)
 plt.style.use("ggplot")
-X = df.iloc[:, :-1]
-y = df.iloc[:, 5:6] 
 mm = MinMaxScaler()
 ss = StandardScaler()
-X_ss = ss.fit_transform(X)
-y_mm = mm.fit_transform(y) 
-X_train = X_ss[:180, :]
-X_test = X_ss[180:, :]
+# X = df['Open','High','Low','Close','Volume']
+# y = df['Adj','Close'] 
+data_scaled = pd.DataFrame(mm.fit_transform(df), columns=df.columns)
+feature_list = ['Open','High','Low','Close','Volume']
+label_list = ['Adj Close'] 
+X = data_scaled[feature_list].to_numpy()
+y = data_scaled[label_list].to_numpy()
+X_train = X[:180, :]
+X_test = y[180:, :]
 
-y_train = y_mm[:180, :]
-y_test = y_mm[180:, :] 
+y_train = y[:180, :]
+y_test = y[180:, :] 
 X_train_tensors = Variable(torch.Tensor(X_train))
 X_test_tensors = Variable(torch.Tensor(X_test))
 
@@ -128,7 +146,7 @@ y_test_tensors = Variable(torch.Tensor(y_test))
 X_train_tensors_final = torch.reshape(X_train_tensors,   (X_train_tensors.shape[0], 1, X_train_tensors.shape[1]))
 X_test_tensors_final = torch.reshape(X_test_tensors,  (X_test_tensors.shape[0], 1, X_test_tensors.shape[1])) 
 
-num_epochs = 5000 
+num_epochs = 1 
 learning_rate = 0.001 
 
 input_size = 5 
@@ -143,25 +161,28 @@ criterion = torch.nn.MSELoss()
 optimizer_lstm = torch.optim.Adam(lstm1.parameters(), lr=learning_rate) 
 optimizer_gru = torch.optim.Adam(gru1.parameters(), lr=learning_rate) 
 optimizer_rnn = torch.optim.Adam(rnn1.parameters(), lr=learning_rate) 
-
+testDataset = TensorDataset(X_train_tensors_final,y_train_tensors)
+testDataloader = DataLoader(testDataset)
 start_lstm = time.time()
-train(lstm1,criterion,optimizer_lstm, "LSTM")
+train(lstm1,criterion,optimizer_lstm, num_epochs,testDataloader)
 end_lstm = time.time()
 elapse_lstm = end_lstm - start_lstm
 print("Время тренировки LSTM: " + str(elapse_lstm))
 
 start_rnn = time.time()
-train(rnn1,criterion,optimizer_rnn, "RNN")
+train(rnn1,criterion,optimizer_rnn, num_epochs,testDataloader)
 end_rnn = time.time()
 elapse_rnn = end_rnn - start_rnn
 
 start_gru = time.time()
-train(gru1,criterion,optimizer_gru, "GRU")
+train(gru1,criterion,optimizer_gru, num_epochs,testDataloader)
 end_gru = time.time()
 elapse_gru = end_gru - start_gru
 
 df_X_ss = ss.transform(df.iloc[:, :-1]) 
+print(df_X_ss)
 df_y_mm = mm.transform(df.iloc[:, -1:]) 
+print(df_y_mm)
 
 df_X_ss = Variable(torch.Tensor(df_X_ss))
 df_y_mm = Variable(torch.Tensor(df_y_mm))
